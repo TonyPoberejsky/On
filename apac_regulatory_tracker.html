@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APAC Regulatory Tracker — On Running</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #111111;
+    --ink-2: #444444;
+    --ink-3: #888888;
+    --ink-4: #bbbbbb;
+    --surface: #ffffff;
+    --surface-2: #f7f6f3;
+    --surface-3: #efefeb;
+    --border: #e2e1dd;
+    --border-strong: #c8c7c2;
+    --green: #2a6b3c;
+    --green-bg: #eaf3ed;
+    --amber: #7a4f0d;
+    --amber-bg: #fdf3e1;
+    --red: #8b2020;
+    --red-bg: #fceaea;
+    --blue: #1a4f82;
+    --blue-bg: #e8f1fa;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--ink);
+    color: white;
+    padding: 32px 40px 28px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .header-left { flex: 1; }
+  .header-logo {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    color: white;
+    margin-bottom: 16px;
+    opacity: 0.9;
+  }
+  .header-title {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    color: white;
+    line-height: 1.15;
+  }
+  .header-title strong { font-weight: 600; }
+  .header-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    margin-top: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .header-stats {
+    display: flex;
+    gap: 32px;
+    padding-left: 40px;
+    border-left: 1px solid rgba(255,255,255,0.12);
+  }
+  .stat { text-align: right; }
+  .stat-num {
+    font-size: 32px;
+    font-weight: 300;
+    color: white;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+
+  /* CONTROLS */
+  .controls {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .controls-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    margin-right: 4px;
+  }
+  .filter-btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 0.12s;
+    letter-spacing: 0.01em;
+  }
+  .filter-btn:hover { background: var(--surface-2); }
+  .filter-btn.active {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+  }
+  .divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .search-wrap { margin-left: auto; position: relative; }
+  .search-wrap input {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 6px 12px 6px 32px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--surface-2);
+    color: var(--ink);
+    width: 220px;
+    outline: none;
+    transition: border 0.12s;
+  }
+  .search-wrap input:focus { border-color: var(--ink); background: var(--surface); }
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  /* MAIN */
+  .main { padding: 32px 40px 60px; }
+  .results-bar {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+  }
+  .results-bar span { color: var(--ink); font-weight: 500; }
+
+  /* TABLE */
+  .table-wrap { border-radius: 10px; border: 1px solid var(--border); overflow: hidden; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr {
+    background: var(--surface-3);
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    padding: 10px 16px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--ink); }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.08s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-2); }
+  tbody tr.hidden { display: none; }
+  td {
+    padding: 13px 16px;
+    vertical-align: top;
+    font-size: 13px;
+    color: var(--ink-2);
+    line-height: 1.45;
+  }
+  td.market-cell { font-weight: 600; color: var(--ink); white-space: nowrap; }
+  td.req-cell { color: var(--ink); font-weight: 500; max-width: 180px; }
+  td.detail-cell { max-width: 220px; font-size: 12px; }
+  td.config-cell { max-width: 210px; font-size: 12px; color: var(--blue); }
+  td.open-cell { max-width: 160px; font-size: 12px; color: var(--amber); }
+  td.source-cell { font-size: 11px; }
+
+  /* BADGES */
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .badge-market {
+    background: var(--ink);
+    color: white;
+    border-radius: 3px;
+    margin-right: 6px;
+    font-size: 9px;
+    padding: 2px 6px;
+    vertical-align: middle;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+  .badge-gray { background: var(--surface-3); color: var(--ink-3); }
+
+  /* WORKDAY TAG */
+  .wd-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border: 1px solid #bbd0e8;
+    background: #eaf1f9;
+    color: #1a4f82;
+    border-radius: 3px;
+    margin-top: 4px;
+    margin-right: 3px;
+    margin-bottom: 2px;
+  }
+
+  /* SOURCE LINK */
+  .src-link {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-3);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--border-strong);
+    transition: color 0.1s;
+  }
+  .src-link:hover { color: var(--ink); }
+
+  /* OPEN QUESTION DOT */
+  .open-q { display: flex; gap: 6px; align-items: flex-start; }
+  .open-q::before {
+    content: '';
+    flex-shrink: 0;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--amber);
+    margin-top: 5px;
+  }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 40px;
+    padding: 0 40px 40px;
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+  }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-3); font-family: var(--mono); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .footer-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-4);
+    letter-spacing: 0.03em;
+    line-height: 1.7;
+    margin-left: auto;
+    text-align: right;
+    max-width: 320px;
+  }
+
+  /* PHASE INDICATOR */
+  .phase-chip {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+
+  /* EMPTY STATE */
+  .empty {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--ink-3);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    display: none;
+  }
+  .empty.visible { display: block; }
+
+  /* PRINT */
+  @media print {
+    .controls { position: static; }
+    .filter-btn, .search-wrap { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">On Running</div>
+    <div class="header-title"><strong>APAC Regulatory Compliance Tracker</strong><br>Time Tracking · Absence · Scheduling</div>
+    <div class="header-meta">WORKDAY ROLLOUT · 5 MARKETS · 22 STORES · 18 MONTHS · BUILT DURING CASE STUDY PREPARATION</div>
+  </div>
+  <div class="header-stats">
+    <div class="stat">
+      <div class="stat-num" id="stat-total">40</div>
+      <div class="stat-label">Requirements</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">5</div>
+      <div class="stat-label">Markets</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-open">14</div>
+      <div class="stat-label">Open items</div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <span class="controls-label">Filter</span>
+  <button class="filter-btn active" data-filter="all">All markets</button>
+  <button class="filter-btn" data-filter="japan">Japan</button>
+  <button class="filter-btn" data-filter="china">China</button>
+  <button class="filter-btn" data-filter="south korea">South Korea</button>
+  <button class="filter-btn" data-filter="australia">Australia</button>
+  <button class="filter-btn" data-filter="singapore">Singapore</button>
+  <div class="divider"></div>
+  <button class="filter-btn" data-type="all-type">All types</button>
+  <button class="filter-btn" data-type="overtime">Overtime</button>
+  <button class="filter-btn" data-type="leave">Leave</button>
+  <button class="filter-btn" data-type="breaks">Breaks</button>
+  <button class="filter-btn" data-type="records">Records</button>
+  <button class="filter-btn" data-type="holidays">Holidays</button>
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 16 16" fill="none">
+      <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <input type="text" id="search" placeholder="Search requirements...">
+  </div>
+</div>
+
+<div class="main">
+  <div class="results-bar">Showing <span id="count">40</span> requirements</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:90px">Market</th>
+          <th style="width:70px">Type</th>
+          <th style="width:55px">Phase</th>
+          <th style="width:175px">Requirement</th>
+          <th style="width:220px">Detail</th>
+          <th style="width:215px">Workday configuration</th>
+          <th style="width:160px">Open question</th>
+          <th style="width:110px">Source</th>
+          <th style="width:80px">Status</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+      </tbody>
+    </table>
+    <div class="empty" id="empty">No requirements match your filters.</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#2a6b3c"></div>Verified — source confirmed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1a4f82"></div>Likely — standard practice</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7a4f0d"></div>Needs validation on the ground</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#8b2020"></div>High risk — legal sign-off required</div>
+    </div>
+  </div>
+  <div class="footer-note">
+    Built during case study preparation · Tony Poberejsky · April 2026<br>
+    Sources: local labour ministry sites, ILO country profiles,<br>
+    Workday Community documentation, legal research databases.<br>
+    All items require local legal counsel validation before go-live.
+  </div>
+</div>
+
+<script>
+const DATA = [
+  {market:"Japan",type:"overtime",phase:"P3",requirement:"Daily overtime threshold",detail:"Hours over 8/day trigger 25% premium. Governed by Labor Standards Act Art. 37.",config:"Time calc tag: JP_OT_DAILY. Eligibility: JP_RETAIL workers. Multiplier: 1.25×.",open:"Confirm which employees are subject vs. 36 Agreement exempt",source:"LSA Art. 37",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"verified"},
+  {market:"Japan",type:"overtime",phase:"P3",requirement:"Weekly overtime threshold",detail:"Hours over 40/week (aggregate) trigger 25% premium, layered on top of daily calc.",config:"Time calc tag: JP_OT_WEEKLY. Period: weekly. Separate eligibility rule stacked on daily.",open:"Validate stacking order in Workday when daily + weekly both breach",source:"LSA Art. 32",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"verified"},
+  {market:"Japan",type:"overtime",phase:"P3",requirement:"60h/month overtime threshold",detail:"Overtime exceeding 60h/month triggers 50% premium (up from 25%). Requires cumulative monthly tracking.",config:"JP_OT_MONTHLY_60 eligibility rule. Forward-looking PRISM dashboard — flag employees at 55h mid-month.",open:"Does native Workday Time Tracking handle cumulative forward-look, or does PRISM report need custom calc?",source:"LSA Art. 37 (2010 amend.)",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"verified"},
+  {market:"Japan",type:"overtime",phase:"P3",requirement:"Late-night premium",detail:"Work between 22:00–05:00 triggers additional 25% premium on top of base rate. Combined with OT = 50% total.",config:"Time calc tag: JP_LATE_NIGHT. Trigger: shift hours intersecting 22:00–05:00 window.",open:"Confirm handling of split shifts that straddle midnight",source:"LSA Art. 37(4)",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"verified"},
+  {market:"Japan",type:"breaks",phase:"P3",requirement:"Mandatory break — 6–8h shift",detail:"45-minute break mandatory for shifts between 6 and 8 hours. Non-negotiable under LSA.",config:"Auto-deduction rule: shift 6–8h → deduct 45min. Manager visibility flag on dashboard.",open:"Confirm whether break must be uninterrupted or can be split",source:"LSA Art. 34",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"verified"},
+  {market:"Japan",type:"breaks",phase:"P3",requirement:"Mandatory break — >8h shift",detail:"60-minute break mandatory for shifts exceeding 8 hours.",config:"Auto-deduction rule: shift >8h → deduct 60min. Stacks on top of 45min rule — not additive, replaces.",open:"Confirm whether retail store can designate collective break time under Art. 34(2)",source:"LSA Art. 34",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"verified"},
+  {market:"Japan",type:"overtime",phase:"P3",requirement:"Rest interval between shifts",detail:"2019 Work Style Reform introduced effort obligation (~11h recommended between shifts). Not yet legally mandatory but widely expected to become so.",config:"Configure Workday Scheduling validation for 11h minimum interval proactively. Flag on scheduling conflict report.",open:"Confirm On's policy position — configure for current effort obligation or await mandate?",source:"Work Style Reform Act 2018",sourceUrl:"https://www.mhlw.go.jp/english/policy/employ-labour/labour-standards/dl/201904kizyun.pdf",status:"needs-validation"},
+  {market:"Japan",type:"leave",phase:"P3",requirement:"Annual paid leave entitlement",detail:"10–20 days based on length of service. Employees with ≥6 months tenure and ≥80% attendance rate qualify.",config:"Workday Absence — seniority-based accrual plan. Entry: hire date + attendance metric feed.",open:"How is 80% attendance calculated — calendar days or scheduled days? Confirm with local HR.",source:"LSA Art. 39",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"verified"},
+  {market:"Japan",type:"leave",phase:"P3",requirement:"Mandatory minimum leave usage",detail:"Employees with ≥10 days entitlement must take at least 5 days/year. Legally enforced — employer obligation.",config:"Absence tracking with 5-day minimum usage threshold. Automated manager alert when employee behind pace (triggered at Aug 1 and Nov 1).",open:"Build alert into Case 2 absence intelligence dashboard as a compliance trigger",source:"LSA Art. 39(7)",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"verified"},
+  {market:"Japan",type:"records",phase:"P3",requirement:"Time record retention",detail:"Employers must retain time records for up to 5 years (extended from 3 years in 2023).",config:"Workday standard data retention policy. Confirm data residency — Japan data may need to remain in-country.",open:"Confirm IT team position on data residency and whether Workday tenant is Japan-region or global.",source:"LSA Art. 109 (2023 amend.)",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"needs-validation"},
+  {market:"Japan",type:"records",phase:"P3",requirement:"36 Agreement (Saburoku)",detail:"Employer must file 36 Agreement with Labour Standards Inspection Office before any overtime is allowed. Caps OT at 45h/month ordinary, 100h/month exceptional.",config:"Flag in Workday scheduling if employee approaches 36 Agreement cap. Monthly cap: 45h standard / 100h exceptional. Annual cap: 360h / 720h.",open:"Confirm current 36 Agreement status of franchise-converted stores — did conversion require re-filing?",source:"LSA Art. 36",sourceUrl:"https://www.mhlw.go.jp/english/org/policy/dl/150602-01.pdf",status:"high-risk"},
+
+  {market:"China",type:"overtime",phase:"P4",requirement:"Standard working hours regime",detail:"8h/day, 40h/week standard. Applies to most retail store staff. Overtime cap: 3h/day, 36h/month.",config:"Eligibility group: CN_STANDARD. Hard cap on OT approval — system blocks scheduling beyond monthly limit.",open:"Validate which employees fall under Standard vs Comprehensive regime — requires local HR and legal input per city",source:"Labour Law Art. 36",sourceUrl:"http://www.npc.gov.cn/zgrdw/englishnpc/Law/2007-12/12/content_1383754.htm",status:"verified"},
+  {market:"China",type:"overtime",phase:"P4",requirement:"Comprehensive working hours regime",detail:"Reference period averages hours over quarter or year. May apply to some store managers. Requires local government approval.",config:"Separate eligibility group: CN_COMPREHENSIVE. Reference period: quarterly. Requires govt approval doc on file.",open:"Do On's store manager roles qualify? Which cities? Requires legal advice per city before configuration.",source:"MOL Circular 1994 No.503",sourceUrl:"",status:"high-risk"},
+  {market:"China",type:"overtime",phase:"P4",requirement:"Overtime premium — weekday",detail:"Weekday overtime: 150% of base rate (1.5×).",config:"Time calc tag: CN_OT_WEEKDAY. Multiplier 1.5. Eligibility: CN_STANDARD group.",open:"",source:"Labour Law Art. 44",sourceUrl:"http://www.npc.gov.cn/zgrdw/englishnpc/Law/2007-12/12/content_1383754.htm",status:"verified"},
+  {market:"China",type:"overtime",phase:"P4",requirement:"Overtime premium — weekend",detail:"Weekend work (scheduled rest day not compensated with a lieu day): 200% of base rate (2×).",config:"Time calc tag: CN_OT_WEEKEND. Multiplier 2.0. Separate from weekday OT.",open:"Confirm whether On's retail model offers lieu days — if so, 2× premium may not apply.",source:"Labour Law Art. 44",sourceUrl:"http://www.npc.gov.cn/zgrdw/englishnpc/Law/2007-12/12/content_1383754.htm",status:"needs-validation"},
+  {market:"China",type:"holidays",phase:"P4",requirement:"Statutory public holiday premium",detail:"Work on statutory public holidays: 300% of base rate (3×). No lieu day substitution permitted.",config:"Time calc tag: CN_OT_HOLIDAY. Multiplier 3.0. Holiday calendar linked to State Council annual announcement.",open:"",source:"Labour Law Art. 44",sourceUrl:"http://www.npc.gov.cn/zgrdw/englishnpc/Law/2007-12/12/content_1383754.htm",status:"verified"},
+  {market:"China",type:"overtime",phase:"P4",requirement:"Overtime consent requirement",detail:"Overtime requires explicit, documented employee consent — not assumed. Consent must be logged before OT is worked.",config:"Workday consent-capture workflow: consent logged in system before OT approved by manager. Audit trail maintained.",open:"Is digital consent sufficient or does paper signature required in each city?",source:"Labour Law Art. 41",sourceUrl:"http://www.npc.gov.cn/zgrdw/englishnpc/Law/2007-12/12/content_1383754.htm",status:"needs-validation"},
+  {market:"China",type:"holidays",phase:"P4",requirement:"Annual State Council holiday calendar",detail:"State Council publishes official holiday calendar each December for the following year. Includes adjusted working days (weekends becoming working days).",config:"Manual annual update process. Named owner updates Workday holiday calendar within 1 week of State Council announcement. Recurring calendar reminder configured.",open:"Identify named owner before go-live. Build governance process into project plan.",source:"State Council annual circular",sourceUrl:"https://www.gov.cn",status:"needs-validation"},
+  {market:"China",type:"leave",phase:"P4",requirement:"Annual leave — cumulative tenure",detail:"Leave entitlement based on total work history across all employers: 5 days (1–10 yrs), 10 days (10–20 yrs), 15 days (20+ yrs).",config:"Workday absence plan: prior-employment years captured at hire. Self-declaration field + governance note on data quality.",open:"Prior employment years self-declared — data quality gap. Flag to HR: cannot fully automate, requires validation process.",source:"Regulations on Paid Annual Leave 2007",sourceUrl:"",status:"needs-validation"},
+  {market:"China",type:"records",phase:"P4",requirement:"Regional minimum wage variation",detail:"Minimum wage set at province and city level — Shanghai, Beijing, Shenzhen all differ. Updated periodically.",config:"Location-based eligibility rules using On's existing Workday cost centre and location attributes. Separate pay groups per city.",open:"Confirm all 10 store city locations and run wage floor check per city before payroll config.",source:"Provincial HR bureaus",sourceUrl:"",status:"high-risk"},
+  {market:"China",type:"records",phase:"P4",requirement:"Social insurance contribution rates",detail:"Social insurance (pension, medical, unemployment, work injury, maternity) contribution rates vary by city.",config:"Workday Benefits: city-level contribution tables. Linked to location attribute. Payroll integration must carry city code.",open:"Rates change periodically — need local HR or payroll provider to flag changes. Build into governance process.",source:"City social insurance bureaus",sourceUrl:"",status:"high-risk"},
+  {market:"China",type:"records",phase:"P4",requirement:"Data localisation",detail:"China's PIPL and Data Security Law require personal data of Chinese employees to be stored in-country or with explicit cross-border transfer approval.",config:"Confirm with IT: is Workday tenant configured for China data residency? If not, data localisation workstream required before go-live.",open:"Critical: confirm Workday data residency with IT and legal. This is a go/no-go dependency.",source:"PIPL 2021 / DSL 2021",sourceUrl:"",status:"high-risk"},
+
+  {market:"South Korea",type:"overtime",phase:"P2",requirement:"Maximum weekly working hours",detail:"52h/week maximum (40h regular + 12h OT). Applies to workplaces with 5+ employees. Phased enforcement completed for all firms.",config:"Hard cap in Workday scheduling: block assignments that would breach 52h/week. Warning at 48h.",open:"Confirm any exceptions for specific retail roles or shift structures",source:"Labour Standards Act Art. 53",sourceUrl:"https://www.law.go.kr/LSW/eng/engLsSc.do",status:"verified"},
+  {market:"South Korea",type:"overtime",phase:"P2",requirement:"Overtime premium rate",detail:"OT beyond 40h/week: 150% of ordinary wage. Night work (22:00–06:00) and holiday work also attract 150%.",config:"Time calc tag: KR_OT. Multiplier 1.5. Night differential: KR_NIGHT (22:00–06:00 window).",open:"Confirm ordinary wage definition for part-time associates — variable components included?",source:"LSA Art. 56",sourceUrl:"https://www.law.go.kr/LSW/eng/engLsSc.do",status:"verified"},
+  {market:"South Korea",type:"leave",phase:"P2",requirement:"Annual leave entitlement",detail:"15 days after 1 year of continuous service; 1 additional day per 2 years (max 25 days). First year: 1 day per month worked.",config:"Workday Absence: seniority accrual plan. First-year prorated monthly accrual, then anniversary-based.",open:"Confirm handling for part-time associates — proportional entitlement calculation",source:"LSA Art. 60",sourceUrl:"https://www.law.go.kr/LSW/eng/engLsSc.do",status:"verified"},
+  {market:"South Korea",type:"holidays",phase:"P2",requirement:"Public holidays",detail:"15 statutory public holidays. Work on public holiday requires 150% premium or compensatory day off.",config:"Korea public holiday calendar in Workday. Holiday OT tag: KR_HOLIDAY (1.5×). Lieu day workflow if applicable.",open:"Confirm On's policy: lieu day or premium pay for holiday work?",source:"Labour Standards Act / Act on Holidays",sourceUrl:"",status:"needs-validation"},
+  {market:"South Korea",type:"breaks",phase:"P2",requirement:"Mandatory break",detail:"30 min for shifts of 4h; 1 hour for shifts of 8h or more.",config:"Auto-deduction rules: 4–8h shift → 30min; >8h → 60min.",open:"",source:"LSA Art. 54",sourceUrl:"https://www.law.go.kr/LSW/eng/engLsSc.do",status:"verified"},
+  {market:"South Korea",type:"records",phase:"P2",requirement:"Record-keeping",detail:"Time records must be retained for 3 years.",config:"Standard Workday retention. Confirm data residency — Korean personal data subject to PIPA.",open:"Confirm PIPA compliance with IT for any cross-border data flows",source:"LSA Art. 42 / PIPA",sourceUrl:"",status:"needs-validation"},
+
+  {market:"Australia",type:"overtime",phase:"P1",requirement:"Overtime — full-time employees",detail:"Full-time (38h/week): overtime beyond 38h. Rate depends on award/enterprise agreement. Retail industry award (GRIA): Mon–Sat before 7pm = time+half; Mon–Sat after 7pm and Sun = double time.",config:"Time calc tags: AU_OT_STANDARD (1.5×), AU_OT_DOUBLE (2.0×). Time-of-day trigger for after-7pm and Sunday.",open:"Confirm which award applies to On's Australian retail staff — GRIA or bespoke enterprise agreement",source:"GRIA (SIA) / Fair Work Act",sourceUrl:"https://www.fwc.gov.au",status:"needs-validation"},
+  {market:"Australia",type:"leave",phase:"P1",requirement:"Annual leave",detail:"4 weeks (20 days) per year for full-time. Part-time pro-rated. Leave loading: additional 17.5% of base rate on leave payment.",config:"Workday Absence: 20-day accrual plan. Leave loading calculation: AU_LEAVE_LOADING (17.5%) applied on payout.",open:"Confirm leave loading applies to On's specific award or agreement",source:"Fair Work Act s.87 / NES",sourceUrl:"https://www.legislation.gov.au/Series/C2009A00028",status:"needs-validation"},
+  {market:"Australia",type:"leave",phase:"P1",requirement:"Personal / carer's leave",detail:"10 days paid personal/carer's leave per year. Separate from annual leave.",config:"Separate Workday absence plan: AU_PERSONAL_CARERS. Accrual: 10 days/year.",open:"",source:"Fair Work Act s.97 / NES",sourceUrl:"https://www.legislation.gov.au/Series/C2009A00028",status:"verified"},
+  {market:"Australia",type:"holidays",phase:"P1",requirement:"Public holidays",detail:"Public holidays vary by state. Victoria, NSW, QLD differ. Retail operating on a public holiday: penalty rates apply (typically 225% under GRIA).",config:"State-level holiday calendars in Workday. AU_HOLIDAY_OT tag (2.25×). Location attribute drives correct state calendar.",open:"Map each store's state. Victoria and NSW stores need different calendars from QLD.",source:"GRIA / state legislation",sourceUrl:"https://www.fwc.gov.au",status:"needs-validation"},
+  {market:"Australia",type:"breaks",phase:"P1",requirement:"Meal break entitlement",detail:"Unpaid meal break of 30–60 min after 5 consecutive hours. Exact terms set by award.",config:"Auto-deduction: shift >5h → 30min unpaid break. Confirm exact duration from award.",open:"Confirm break duration and paid/unpaid status under applicable award",source:"GRIA / Fair Work",sourceUrl:"https://www.fwc.gov.au",status:"needs-validation"},
+  {market:"Australia",type:"records",phase:"P1",requirement:"Record-keeping",detail:"Time and wages records must be kept for 7 years (extended under Fair Work Amendment 2021).",config:"Workday data retention: 7-year minimum. Australia data can reside in global tenant — no localisation requirement.",open:"",source:"Fair Work Act s.535 / Fair Work Regulations",sourceUrl:"https://www.legislation.gov.au/Series/C2009A00028",status:"verified"},
+
+  {market:"Singapore",type:"overtime",phase:"P2",requirement:"Overtime — workmen and non-workmen",detail:"OT rules apply to employees earning ≤S$2,600/month (workmen) or ≤S$2,600/month non-workmen. OT rate: 1.5× hourly rate of pay.",config:"Eligibility group: SG_OT_ELIGIBLE (salary threshold filter). Time calc tag: SG_OT (1.5×).",open:"Confirm salary threshold applicability for On's associate grades — above S$2,600 may be OT-exempt",source:"Employment Act s.38",sourceUrl:"https://sso.agc.gov.sg/Act/EmA1968",status:"needs-validation"},
+  {market:"Singapore",type:"overtime",phase:"P2",requirement:"Maximum OT hours",detail:"OT capped at 72 hours/month for employees covered by Employment Act.",config:"Hard cap in Workday scheduling: block OT beyond 72h/month for SG_OT_ELIGIBLE group.",open:"",source:"Employment Act s.38(5)",sourceUrl:"https://sso.agc.gov.sg/Act/EmA1968",status:"verified"},
+  {market:"Singapore",type:"leave",phase:"P2",requirement:"Annual leave",detail:"Minimum 7 days for first year, increasing by 1 day/year up to 14 days. Pro-rated for part-time.",config:"Workday Absence: seniority accrual plan. SG_ANNUAL_LEAVE. Prorated calculation for part-time.",open:"",source:"Employment Act s.43",sourceUrl:"https://sso.agc.gov.sg/Act/EmA1968",status:"verified"},
+  {market:"Singapore",type:"leave",phase:"P2",requirement:"Sick leave",detail:"14 days outpatient sick leave; 60 days hospitalisation leave per year after 3 months service.",config:"Separate absence plans: SG_SICK (14 days) and SG_HOSPITALISATION (60 days, inclusive of sick leave).",open:"",source:"Employment Act s.89",sourceUrl:"https://sso.agc.gov.sg/Act/EmA1968",status:"verified"},
+  {market:"Singapore",type:"holidays",phase:"P2",requirement:"Public holidays",detail:"11 statutory public holidays. Work on public holiday: employee entitled to extra day's pay or substitute day off.",config:"Singapore holiday calendar in Workday. SG_HOLIDAY tag: 1 extra day pay. Lieu day workflow option.",open:"Confirm On's policy: extra pay or lieu day for Singapore public holiday work",source:"Employment Act s.88",sourceUrl:"https://sso.agc.gov.sg/Act/EmA1968",status:"needs-validation"},
+  {market:"Singapore",type:"breaks",phase:"P2",requirement:"Rest day",detail:"At least 1 rest day per week (24 consecutive hours). For shift workers, can be fixed or rotating.",config:"Workday Scheduling: minimum 1 rest day/week validation rule for SG employees.",open:"",source:"Employment Act s.36",sourceUrl:"https://sso.agc.gov.sg/Act/EmA1968",status:"verified"},
+  {market:"Singapore",type:"records",phase:"P2",requirement:"Record-keeping",detail:"Employment records (including salary, hours) must be kept for 2 years after employment ends.",config:"Workday data retention: 2-year post-termination minimum. Global tenant data residency acceptable.",open:"",source:"Employment Act s.95 / EA (Employment Records) Regs",sourceUrl:"https://sso.agc.gov.sg/Act/EmA1968",status:"verified"},
+];
+
+const phaseLabel = {P1:"Phase 1",P2:"Phase 2",P3:"Phase 3",P4:"Phase 4"};
+const statusMeta = {
+  "verified":{"cls":"badge-green","label":"Verified"},
+  "likely":{"cls":"badge-blue","label":"Likely"},
+  "needs-validation":{"cls":"badge-amber","label":"Validate"},
+  "high-risk":{"cls":"badge-red","label":"High risk"}
+};
+
+const typeMeta = {
+  overtime:  {cls:"badge-blue",    label:"Overtime"},
+  leave:     {cls:"badge-green",   label:"Leave"},
+  breaks:    {cls:"badge-gray",    label:"Breaks"},
+  records:   {cls:"badge-gray",    label:"Records"},
+  holidays:  {cls:"badge-amber",   label:"Holidays"},
+};
+
+const marketColors = {
+  "Japan":"#1a4f82","China":"#8b2020","South Korea":"#2a6b3c",
+  "Australia":"#7a4f0d","Singapore":"#6b2a82"
+};
+
+const wdModules = {
+  overtime:  ["Time Tracking","Calculated Fields","PRISM Dashboard"],
+  leave:     ["Absence Management","Accruals"],
+  breaks:    ["Time Tracking","Auto-deductions"],
+  records:   ["Data Retention","Benefits"],
+  holidays:  ["Holiday Calendars","Time Calc Tags"],
+};
+
+function buildRow(r) {
+  const st = statusMeta[r.status] || statusMeta["needs-validation"];
+  const ty = typeMeta[r.type]  || {cls:"badge-gray",label:r.type};
+  const mods = wdModules[r.type] || [];
+  const srcHtml = r.sourceUrl
+    ? `<a class="src-link" href="${r.sourceUrl}" target="_blank">${r.source}</a>`
+    : `<span style="color:var(--ink-4);font-family:var(--mono);font-size:11px">${r.source||"—"}</span>`;
+  const openHtml = r.open
+    ? `<div class="open-q">${r.open}</div>`
+    : `<span style="color:var(--ink-4)">—</span>`;
+  const wdTags = mods.map(m=>`<span class="wd-tag">${m}</span>`).join('');
+
+  return `<tr data-market="${r.market.toLowerCase()}" data-type="${r.type}">
+    <td class="market-cell">
+      <span class="badge-market" style="background:${marketColors[r.market]||'#444'}">${r.market.substring(0,3).toUpperCase()}</span>
+      ${r.market}
+    </td>
+    <td><span class="badge ${ty.cls}">${ty.label}</span></td>
+    <td><span class="phase-chip">${phaseLabel[r.phase]||r.phase}</span></td>
+    <td class="req-cell">${r.requirement}</td>
+    <td class="detail-cell">${r.detail}</td>
+    <td class="config-cell">${r.config}<br>${wdTags}</td>
+    <td class="open-cell">${openHtml}</td>
+    <td>${srcHtml}</td>
+    <td><span class="badge ${st.cls}">${st.label}</span></td>
+  </tr>`;
+}
+
+const tbody = document.getElementById('tbody');
+tbody.innerHTML = DATA.map(buildRow).join('');
+
+let activeMarket = 'all';
+let activeType   = 'all-type';
+let searchTerm   = '';
+
+function applyFilters() {
+  const rows = tbody.querySelectorAll('tr');
+  let visible = 0;
+  rows.forEach(row => {
+    const m = row.dataset.market;
+    const t = row.dataset.type;
+    const text = row.textContent.toLowerCase();
+    const mOk = activeMarket === 'all' || m === activeMarket;
+    const tOk = activeType   === 'all-type' || t === activeType;
+    const sOk = !searchTerm  || text.includes(searchTerm);
+    const show = mOk && tOk && sOk;
+    row.classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+  document.getElementById('count').textContent = visible;
+  document.getElementById('empty').classList.toggle('visible', visible === 0);
+
+  const openCount = [...rows].filter(r => !r.classList.contains('hidden') && r.querySelector('.open-q')).length;
+  document.getElementById('stat-open').textContent = openCount;
+  document.getElementById('stat-total').textContent = DATA.length;
+}
+
+document.querySelectorAll('[data-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeMarket = btn.dataset.filter;
+    applyFilters();
+  });
+});
+document.querySelectorAll('[data-type]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-type]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeType = btn.dataset.type;
+    applyFilters();
+  });
+});
+document.getElementById('search').addEventListener('input', e => {
+  searchTerm = e.target.value.toLowerCase().trim();
+  applyFilters();
+});
+
+applyFilters();
+</script>
+</body>
+</html>
